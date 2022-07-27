@@ -1,0 +1,342 @@
+<html>
+
+<head>
+
+    <title>RabbitMQ Logger System</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <style>
+        .card-cont {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
+
+        .card-cont>div {
+            width: 40%;
+        }
+
+        .log-level-cont {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
+
+        .log-level-cont>button {
+            margin: 10px;
+            width: 100px;
+        }
+
+        .card-body>div,
+        .card-body>form>div {
+            padding: 5px;
+            border: 2px solid lightgray;
+            border-radius: 10px;
+            margin: 15px;
+            text-align: center;
+        }
+
+        .btn-start {
+            margin: 0 auto;
+            display: block;
+        }
+
+        .form-switch {
+            text-align: left;
+        }
+
+        .log-level-table tr td:nth-child(1) {
+            width: 120px;
+            display: block;
+        }
+
+        .title-main{
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+        }
+
+        .title-cont {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px;
+            display: inline-block;
+        }
+
+        .sub-title {
+            text-align: center;
+            margin: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .card-header {
+            text-align: center;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="container" style="padding: 30px 0;">
+        <div class="title-main">
+            <img style="height: 50px;" src="/static/images/logo.png">
+            <div class="title-cont">Chevron Project</div>
+        </div>
+        <h3 class="sub-title">RabbitMQ LOGGER SYSTEM</h3>
+        <div class="card-cont">
+            <div class="card">
+                <h5 class="card-header">Publisher Client</h5>
+                <div class="card-body">
+
+                    <div>
+                        <div style="font-weight: bold;">
+                            RabbitMQ URL
+
+                            <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                id="rmq_url_txt" value="localhost">
+
+
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-weight: bold;">
+                            LOG Interval
+                        </div>
+                        <div>
+                            <input style="width: 80%;" type="range" id="pub_inter" min="1" max="10" value="1" step="1"
+                                oninput="set_inter()">
+
+                            <div style="border: 1px solid lightgray; padding: 5px; width: max-content; display: inline-block;"
+                                id="pub_inter_span">1</div>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <div style="font-weight: bold; margin: 10px;">
+                            Publish LOG Level
+                        </div>
+                        <div class="log-level-cont">
+                            <button class="btn btn-outline-secondary log-level" onclick="set_level(0)">DEBUG</button>
+                            <button class="btn btn-info log-level" onclick="set_level(1)">INFO</button>
+                            <button class="btn btn-outline-warning log-level" onclick="set_level(2)">WARN</button>
+                            <button class="btn btn-outline-danger log-level" onclick="set_level(3)">ERROR</button>
+                            <button class="btn btn-outline-dark log-level" onclick="set_level(4)">FATAL</button>
+                        </div>
+                    </div>
+                    <!-- 
+                        <div class="form-check" onclick="set_level(0)">
+                            <input class="form-check-input" type="radio" id="radio_log_debug" name="radio_log" checked>
+                            <label class="form-check-label" for="radio_log_debug">DEBUG</label>
+                        </div>
+                        <div class="form-check" onclick="set_level(1)">
+                            <input class="form-check-input" type="radio" id="radio_log_info" name="radio_log">
+                            <label class="form-check-label" for="radio_log_info">INFO</label>
+                        </div>
+                        <div class="form-check" onclick="set_level(2)">
+                            <input class="form-check-input" type="radio" id="radio_log_warn" name="radio_log">
+                            <label class="form-check-label" for="radio_log_warn">WARNING</label>
+                        </div>
+                        <div class="form-check" onclick="set_level(3)">
+                            <input class="form-check-input" type="radio" id="radio_log_error" name="radio_log">
+                            <label class="form-check-label" for="radio_log_error">ERROR</label>
+                        </div>
+                        <div class="form-check" onclick="set_level(4)">
+                            <input class="form-check-input" type="radio" id="radio_log_fatal" name="radio_log">
+                            <label class="form-check-label" for="radio_log_fatal">FATAL</label>
+                        </div>
+ -->
+
+                    <button id="start_pub_btn" class="btn btn-success btn-start" onclick="start_pub()">START
+                        PUBLISH</button>
+                    <button id="stop_pub_btn" class="btn btn-danger btn-start" style="display: none;"
+                        onclick="stop_pub()">STOP
+                        PUBLISH</button>
+
+
+
+                </div>
+
+            </div>
+
+            <div class="card">
+                <h5 class="card-header">Logger Client</h5>
+                <div class="card-body">
+
+
+                    <form action="/new_client" method="post" target="_blank">
+                        <div>
+                            <div style="font-weight: bold;">
+                                RabbitMQ URL
+
+                                <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                    id="rmq_url_txt2" name="rmq_url" value="localhost">
+                            </div>
+                        </div>
+
+                        <div>
+
+                            <div style="width: max-content; margin:auto;">
+                                <div style="font-weight: bold; margin: 10px;">
+                                    Listen LOG Level
+                                </div>
+                                <table class="log-level-table">
+                                    <tr>
+                                        <td>DEBUG</td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" value="true"
+                                                    id="log_debug" name="log_debug">
+
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>INFO</td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" value="true"
+                                                    id="log_info" name="log_info">
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>WARNING</td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" value="true"
+                                                    id="log_warn" name="log_warn">
+                                            </div>
+                                        </td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td>ERROR</td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" checked value="true"
+                                                    id="log_error" name="log_error">
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>FATAL</td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" checked value="true"
+                                                    id="log_fatal" name="log_fatal">
+
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                </table>
+
+
+
+
+
+                            </div>
+                        </div>
+                        <input class="btn btn-success btn-start" type="submit" value="New Logger Client">
+                    </form>
+
+                    <!-- <div>
+                        <button class="btn btn-primary" onclick="new_client_clk()">NEW CLIENT</button>
+                    </div> -->
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    function start_pub() {
+        fetch("/start_publish", {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                rmq_url: rmq_url_txt.value
+            })
+        }).then(res => res.text()).then(data => {
+            console.log(data)
+        })
+        start_pub_btn.style.display = "none";
+        stop_pub_btn.style.display = "block";
+    }
+
+    function stop_pub() {
+        fetch("/stop_publish").then(res => res.text()).then(data => {
+            console.log(data)
+        })
+        start_pub_btn.style.display = "block";
+        stop_pub_btn.style.display = "none";
+    }
+
+    function set_inter() {
+        var inter = parseInt(pub_inter.value)
+        fetch("/set_interval", {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                interval: inter
+            })
+        }).then(res => res.text()).then(data => {
+            console.log(data)
+        })
+
+        pub_inter_span.innerHTML = inter;
+    }
+
+    function set_level(level) {
+        var lvl = ["log_debug", "log_info", "log_warn", "log_error", "log_fatal"][level]
+        fetch("/set_level", {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                log_level: lvl
+            })
+        }).then(res => res.text()).then(data => {
+            console.log(data)
+        })
+
+        var style_class = ["secondary", "info", "warning", "danger", "dark"];
+
+        for (var i = 0; i < 5; i++) {
+            if (level == i) {
+                document.querySelectorAll(".log-level")[i].classList.replace(`btn-outline-${style_class[i]}`, `btn-${style_class[i]}`);
+            } else {
+                document.querySelectorAll(".log-level")[i].classList.replace(`btn-${style_class[i]}`, `btn-outline-${style_class[i]}`);
+            }
+
+        }
+
+    }
+
+    // function new_client_clk() {
+    //     window.open("/static/New_Logger_Client.html", target = "_blank");
+    // }
+</script>
+
+</html>

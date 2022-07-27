@@ -1,0 +1,469 @@
+<html>
+
+<head>
+    <title>Logger Client</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+
+    <style>
+        .div-canvas {
+            background-color: white;
+            border-radius: 10px;
+            padding: 5px 10px;
+            border: 2px solid green;
+            margin: 20px;
+        }
+
+        .log-table {
+            display: block;
+            height: 30vh;
+            overflow: auto;
+            
+            margin: 10px auto;
+            border: 2px solid black;
+
+            width: 85%;
+
+        }
+
+        .log-table td,
+        .log-table th {
+            width: 100px;
+            text-align: center;
+        }
+
+        .log-table thead {
+            position: sticky;
+            top: 0;
+            background: gray;
+
+        }
+
+        .log-table tr th:nth-child(1) {
+            width: 15%;
+        }
+
+        .log-table tr th:nth-child(2) {
+            width: 10%;
+        }
+
+        .log-table tr th:nth-child(3) {
+            width: 10%;
+        }
+
+        .log-table tr th:nth-child(4) {
+            width: 10%;
+        }
+
+        .log-table tr th:nth-child(5) {
+            width: 20%;
+        }
+
+        .log-table tr th:nth-child(6) {
+            width: 20%;
+        }
+
+        .log-table tr th:nth-child(7) {
+            width: 10%;
+        }
+
+        .level1 {
+            background: hsl(0, 100%, 90%);
+        }
+
+        .level2 {
+            background: #0dcaf0;
+        }
+
+        .level3 {
+            background: #ffc107;
+        }
+
+        .level4 {
+            background: #dc3545;
+            color: white;
+        }
+
+        .level5 {
+            background: #212529;
+            color: white;
+        }
+
+        #log_levels_div div {
+            margin: 10px;
+            background: lightseagreen;
+            padding: 5px 10px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        .title-main {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+        }
+
+        .title-cont {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px;
+            display: inline-block;
+        }
+
+        .sub-title {
+            text-align: center;
+            margin: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+
+
+<body>
+    <div class="container" style="padding: 30px 0;">
+
+        <div class="title-main">
+            <img style="height: 50px;" src="/static/images/logo.png">
+            <div class="title-cont">Chevron Project</div>
+        </div>
+        <h3 class="sub-title">RabbitMQ LOGGER SYSTEM</h3>
+
+
+        <h5 style="text-align: center;">{{ clientId }}</h5>
+        <button class="btn btn-danger float-end" onclick="stop_client()">STOP</button>
+        <div class="d-flex" style="align-items: center; padding-left: 80px; margin-bottom: 20px;">
+            <div>
+                Listening for :</div>
+            <div id="log_levels_div" class="d-flex flex-wrap">
+
+            </div>
+        </div>
+        <div>
+            <table class="log-table" id="logs_table">
+                <thead>
+                    <th>TIME</th>
+                    <th>CPU (%)</th>
+                    <th>RAM (%)</th>
+                    <th>DISK (%)</th>
+                    <th>BYTES SENT</th>
+                    <th>BYTES RECV.</th>
+                    <th>LEVEL</th>
+                </thead>
+                <tbody id="logs_cont">
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tbody>
+            </table>
+            <div>
+                <div style="display: flex; justify-content: space-evenly; flex-wrap: wrap;">
+                    <div class="col-sm-5 div-canvas">
+                        <canvas id="cpu_chart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-sm-5 div-canvas">
+                        <canvas id="ram_chart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-sm-5 div-canvas">
+                        <canvas id="disk_chart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-sm-5 div-canvas">
+                        <canvas id="net_chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ChartJS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.4.1/dist/chart.min.js"></script>
+
+</body>
+
+<script>
+
+    var cpu_chart = new Chart(document.getElementById('cpu_chart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'CPU (%)',
+                    data: [],
+                    borderColor: "red",
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Intervals',
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'CPU Usage (%)',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'CPU USAGE (%)'
+                }
+            }
+        },
+    })
+
+
+    var ram_chart = new Chart(document.getElementById('ram_chart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'RAM (%)',
+                    data: [],
+                    borderColor: "blue",
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Intervals',
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'RAM Usage (%)',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'RAM USAGE (%)'
+                }
+            }
+        },
+    })
+
+    var disk_chart = new Chart(document.getElementById('disk_chart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'DISK (%)',
+                    data: [],
+                    borderColor: "blue",
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Intervals',
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'DISK Usage (%)',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'DISK USAGE (%)'
+                }
+            }
+        },
+    })
+
+    var net_chart = new Chart(document.getElementById('net_chart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Data Sent',
+                    data: [],
+                    borderColor: "red",
+                },
+                {
+                    label: 'Data Recv.',
+                    data: [],
+                    borderColor: "blue",
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Intervals',
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Data Trans. (MB)',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'DATA Trans.'
+                }
+            }
+        },
+    })
+
+
+    var clientId = "{{ clientId }}";
+    var log_levels = {{ log_levels | safe}};
+
+    // var clientId = "Client_s-1231321_33";
+    // var log_levels = ["log_debug", "log_info"];
+
+    var log_lvl_inner = "";
+    log_levels.forEach((e, i) => {
+        log_lvl_inner += `<div>${e}</div>`
+    })
+
+    log_levels_div.innerHTML = log_lvl_inner;
+
+    ws = new WebSocket("ws://" + location.host + "/log_client");
+    ws.addEventListener('open', () => {
+        ws.send(clientId);
+        console.log(clientId);
+    });
+
+
+    var cnt = 1;
+
+    ws.addEventListener('message', (e) => {
+        var log = JSON.parse(e.data)
+        console.log(log)
+        if (cnt == 1) {
+            logs_cont.innerHTML = "";
+        }
+        logs_cont.innerHTML += `<tr class='level${["", "log_debug", "log_info", "log_warn", "log_error", "log_fatal"].indexOf(log["level"])}''>
+                <td>${parseInt(log["time"])}</td>
+                <td>${log["cpu_stat"]["cpu"]}</td>
+                <td>${log["cpu_stat"]["memory"]}</td>
+                <td>${log["cpu_stat"]["disk"]}</td>
+                <td>${log["cpu_stat"]["sent_bytes"]}</td>
+                <td>${log["cpu_stat"]["rec_bytes"]}</td>
+                <td>${log["level"]}</td>
+            </tr>`;
+
+        logs_table.scroll({ left: 0, top: logs_cont.offsetHeight, behavior: 'smooth' });
+
+
+
+        cpu_chart.data.datasets[0].data.push(log["cpu_stat"]["cpu"])
+        ram_chart.data.datasets[0].data.push(log["cpu_stat"]["memory"])
+        disk_chart.data.datasets[0].data.push(log["cpu_stat"]["disk"])
+        net_chart.data.datasets[0].data.push(log["cpu_stat"]["sent_bytes"] / 1e6)
+        net_chart.data.datasets[1].data.push(log["cpu_stat"]["rec_bytes"] / 1e6)
+
+        cpu_chart.data.labels.push(cnt);
+        ram_chart.data.labels.push(cnt);
+        disk_chart.data.labels.push(cnt);
+        net_chart.data.labels.push(cnt);
+
+
+        if (cnt > 10) {
+            cpu_chart.data.datasets[0].data.shift()
+            ram_chart.data.datasets[0].data.shift()
+            disk_chart.data.datasets[0].data.shift()
+            net_chart.data.datasets[0].data.shift()
+            net_chart.data.datasets[1].data.shift()
+
+            cpu_chart.data.labels.shift();
+            ram_chart.data.labels.shift();
+            disk_chart.data.labels.shift();
+            net_chart.data.labels.shift();
+        }
+
+        cpu_chart.update()
+        ram_chart.update()
+        disk_chart.update()
+        net_chart.update()
+
+        cnt++;
+    })
+
+    ws.addEventListener('close', (e) => {
+        console.log("ws colse")
+    })
+
+
+    function stop_client() {
+        fetch("/stop_client", {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                clientId: clientId
+            })
+        }).then(() => {
+            window.close();
+        })
+    }
+
+
+
+</script>
+
+</html>
