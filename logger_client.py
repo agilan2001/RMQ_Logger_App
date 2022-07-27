@@ -5,16 +5,17 @@ import pika
 
 class LoggerClient:
 
-    def __init__(self, clientId, log_levels, rmq_url):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=rmq_url))
+    def __init__(self, clientId, log_levels, rmq_url, user, pswd, exch):
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=rmq_url, credentials=pika.PlainCredentials(user, pswd)))
         self.clientId = clientId
+        self.exch = exch
 
         self.log_file = open(f'logs/log-{self.clientId}.log', 'w')
         self.log_file.write(f"time,level,cpu,memory,disk,sent_bytes,rec_bytes\n")
 
         self.channel = self.connection.channel()
 
-        self.channel.exchange_declare(exchange='log_exchange', exchange_type='direct')
+        self.channel.exchange_declare(exchange=self.exch, exchange_type='direct')
 
         result = self.channel.queue_declare(queue='', exclusive=True)
         self.queue_name = result.method.queue
@@ -22,7 +23,7 @@ class LoggerClient:
         self.log_levels = log_levels
         
         for log_level in log_levels:
-            self.channel.queue_bind(exchange='log_exchange', queue=self.queue_name, routing_key=log_level)
+            self.channel.queue_bind(exchange=self.exch, queue=self.queue_name, routing_key=log_level)
 
 
         

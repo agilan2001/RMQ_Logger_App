@@ -15,7 +15,10 @@ log_clients = dict()
 @app.post("/start_publish")
 def start_publish():
     rmq_url = request.json['rmq_url']
-    return publisher.start_publish(rmq_url)
+    user = request.json['user']
+    pswd = request.json['pswd']
+    exch = request.json['exch']
+    return publisher.start_publish(rmq_url, user, pswd, exch)
 
 @app.get("/stop_publish")
 def stop_publish():
@@ -33,14 +36,16 @@ def set_level():
 
 @app.post("/new_client")
 def new_client():
-
-    log_levels = [x for x in request.form if request.form[x] == 'true']
-    # print(log_levels)
-    # return "hi"
-    clientId = f"Client_{str(int(time.time()))}_{str(len(log_clients) + 1)}"
-    new_log_client = LoggerClient(clientId, log_levels, request.form['rmq_url'])
-    log_clients[clientId] = new_log_client
-    return render_template("Logger_Client.html", clientId = clientId, log_levels = str(log_levels))
+    try:
+        log_levels = [x for x in request.form if request.form[x] == 'true']
+        # print(log_levels)
+        # return "hi"
+        clientId = f"Client_{str(int(time.time()))}_{str(len(log_clients) + 1)}"
+        new_log_client = LoggerClient(clientId, log_levels, request.form['rmq_url'], request.form['rmq_user'], request.form['rmq_pswd'], request.form['rmq_exch'])
+        log_clients[clientId] = new_log_client
+        return render_template("Logger_Client.html", clientId = clientId, log_levels = str(log_levels))
+    except:
+        return "Error Occurred"
 
 @sock.route("/log_client")
 def log_client(ws):

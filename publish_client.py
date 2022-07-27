@@ -14,19 +14,27 @@ class PublisherClient:
         self.isPublishing = False
 
 
-    def start_publish(self, rmq_url):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=rmq_url))
-        self.channel = self.connection.channel()
+    def start_publish(self, rmq_url, user, pswd, exch):
+        try:
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=rmq_url, credentials=pika.PlainCredentials(user, pswd)))
+            self.channel = self.connection.channel()
 
-        self.channel.exchange_declare(exchange='log_exchange', exchange_type='direct')
-        
-        self.prev_sent_bytes = psutil.net_io_counters().bytes_sent
-        self.prev_recv_bytes = psutil.net_io_counters().bytes_recv
+            self.exch = exch
 
-        self.isPublishing = True
-        self.th = threading.Thread(target= self.publish)
-        self.th.start()
-        return "Publish started"
+            print(exch)
+
+            self.channel.exchange_declare(exchange=exch, exchange_type='direct')
+            
+            self.prev_sent_bytes = psutil.net_io_counters().bytes_sent
+            self.prev_recv_bytes = psutil.net_io_counters().bytes_recv
+
+            self.isPublishing = True
+            self.th = threading.Thread(target= self.publish)
+            self.th.start()
+            return "Publish started"
+        except:
+            print(123)
+            return "Error occurred"
 
     def stop_publish(self):
         self.isPublishing = False
@@ -62,7 +70,7 @@ class PublisherClient:
             self.prev_sent_bytes = cur_sent_bytes
             # print(log_val)
             
-            self.channel.basic_publish(exchange='log_exchange', routing_key=self.log_level, body=json.dumps(log_val))
+            self.channel.basic_publish(exchange=self.exch, routing_key=self.log_level, body=json.dumps(log_val))
             # print(" [x] Sent %r:%r" % (self.log_level, log_val))
             time.sleep(self.interval)
 

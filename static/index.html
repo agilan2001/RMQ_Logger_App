@@ -56,7 +56,7 @@
             display: block;
         }
 
-        .title-main{
+        .title-main {
             display: flex;
             justify-content: center;
             align-items: baseline;
@@ -79,8 +79,6 @@
         .card-header {
             text-align: center;
         }
-
-        
     </style>
 </head>
 
@@ -98,10 +96,19 @@
 
                     <div>
                         <div style="font-weight: bold;">
-                            RabbitMQ URL
+                            RabbitMQ Config
 
                             <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
                                 id="rmq_url_txt" value="localhost">
+
+                            <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                placeholder="user" id="rmq_user_txt" value="user1">
+
+                            <input class="form-control" style="width: 80%; margin: 10px auto;" type="password"
+                                placeholder="password" id="rmq_pass_txt" value="user1">
+
+                            <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                placeholder="exchange" id="rmq_exchange" value="log_exchange">
 
 
                         </div>
@@ -168,7 +175,7 @@
 
             </div>
 
-            <div class="card"  style="background: lightcyan;">
+            <div class="card" style="background: lightcyan;">
                 <h5 class="card-header">Logger Client</h5>
                 <div class="card-body">
 
@@ -176,10 +183,20 @@
                     <form action="/new_client" method="post" target="_blank">
                         <div>
                             <div style="font-weight: bold;">
-                                RabbitMQ URL
+                                RabbitMQ Config
 
                                 <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
                                     id="rmq_url_txt2" name="rmq_url" value="localhost">
+
+                                <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                    placeholder="user" name="rmq_user" id="rmq_user_txt2" value="user1">
+
+                                <input class="form-control" style="width: 80%; margin: 10px auto;" type="password"
+                                    placeholder="password" name="rmq_pswd" id="rmq_pass_txt2" value="user1">
+
+
+                                <input class="form-control" style="width: 80%; margin: 10px auto;" type="text"
+                                    placeholder="exchange"  name="rmq_exch" id="rmq_exchange2" value="log_exchange">
                             </div>
                         </div>
 
@@ -273,13 +290,20 @@
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                rmq_url: rmq_url_txt.value
+                rmq_url: rmq_url_txt.value,
+                user: rmq_user_txt.value,
+                pswd: rmq_pass_txt.value,
+                exch: rmq_exchange.value
             })
         }).then(res => res.text()).then(data => {
             console.log(data)
+
+            if(data != "Publish started")
+                return;
+            start_pub_btn.style.display = "none";
+            stop_pub_btn.style.display = "block";
         })
-        start_pub_btn.style.display = "none";
-        stop_pub_btn.style.display = "block";
+        
     }
 
     function stop_pub() {
